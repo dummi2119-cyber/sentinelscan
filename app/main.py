@@ -149,3 +149,13 @@ class CSRFMiddleware:
 
 # Registering last makes this the outermost middleware (runs first on request).
 app.add_middleware(CSRFMiddleware)
+
+
+# Attach the feature routers so this ASGI `app` is self-contained no matter how
+# it is launched (e.g. `uvicorn app.main:app`). The import is deferred to the
+# bottom to avoid a circular import: pages/api import names from this module, all
+# of which are defined above.
+from . import pages, api  # noqa: E402
+
+app.include_router(pages.router)
+app.include_router(api.router)

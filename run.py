@@ -1,13 +1,12 @@
-"""Entry point: initialize routers and launch uvicorn."""
+"""Entry point: launch uvicorn.
+
+The `app` object (app.main.app) already attaches the page and API routers at
+import time, so this module only needs to import it and serve it.
+"""
 import os
-import sys
 import uvicorn
 
-from app import main, pages, api
 from app.main import app as application
-
-# attach the page and API routers to the app
-main.include([pages.router, api.router])
 
 
 def main():
