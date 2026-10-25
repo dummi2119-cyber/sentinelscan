@@ -14,8 +14,11 @@ python run.py          # serves on http://localhost:8000
 ```
 
 - User signup: `/register`
-- Admin login: `/admin/login` → `admin@sentinel.local` / `Admin123!`
-  (the admin account is re-seeded on every startup)
+- Admin login: `/admin/login` — the admin account is seeded on first run.
+  Its password is **not** shown on the site: it is printed to the server
+  console/log on first boot (e.g. `[SentinelScan] Admin account created -> ... / <password>`)
+  and saved to `data/.admin_password`. Set `ADMIN_EMAIL` / `ADMIN_PASSWORD`
+  environment variables to choose your own credentials (recommended for deploy).
 
 ## Deploy (free)
 

@@ -27,6 +27,35 @@ else:
 ALGORITHM = "HS256"
 TOKEN_TTL_SECONDS = 60 * 60 * 8  # 8 hours
 
+# ---- Admin bootstrap credentials -----------------------------------------
+# The admin account is seeded on first run. Override the email/password with
+# ADMIN_EMAIL / ADMIN_PASSWORD env vars (set these on your deploy). If no
+# password is given, a strong random one is generated ONCE, saved to
+# data/.admin_password, and printed to the server console/log — it never
+# appears on any web page.
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@sentinel.local").strip() or "admin@sentinel.local"
+_ADMIN_PW_ENV = os.environ.get("ADMIN_PASSWORD", "").strip()
+
+
+def get_admin_password():
+    """Return the configured admin password, minting + persisting a random
+    one on first use so it survives restarts and stays off the website."""
+    if _ADMIN_PW_ENV:
+        return _ADMIN_PW_ENV
+    pw_path = os.path.join(DATA_DIR, ".admin_password")
+    if os.path.exists(pw_path):
+        with open(pw_path, "r") as fh:
+            pw = fh.read().strip()
+        if pw:
+            return pw
+    pw = secrets.token_urlsafe(18)
+    with open(pw_path, "w") as fh:
+        fh.write(pw)
+    return pw
+
+
+ADMIN_PASSWORD_MINTED = not bool(_ADMIN_PW_ENV)  # True when we generated a random one
+
 COOKIE_NAME = "sentinel_session"
 COOKIE_SECURE = False  # dev only; flip to True behind HTTPS
 

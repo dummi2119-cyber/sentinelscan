@@ -137,14 +137,18 @@ def seed_db():
                 (key, p["name"], p["price"], p["credits"], json.dumps(p["features"]), 1, 0),
             )
         conn.execute("UPDATE plans SET highlight=1 WHERE key='pro'")
-        # default admin (admin@sentinel.local / Admin123!) only if missing
+        # default admin (email/password from config/env; random if unset) only if missing
         row = conn.execute("SELECT 1 FROM users WHERE role='admin'").fetchone()
         if not row:
-            pw_hash, salt = security.hash_password("Admin123!")
+            admin_pw = config.get_admin_password()
+            pw_hash, salt = security.hash_password(admin_pw)
             conn.execute(
                 "INSERT INTO users (email,password_hash,salt,name,company,role,plan,credits,is_active,created_at) VALUES (?,?,?,?,?,?,?,?,1,?)",
-                ("admin@sentinel.local", pw_hash, salt, "Platform Admin", "SentinelScan", "admin", "enterprise", 999999, now_ts()),
+                (config.ADMIN_EMAIL, pw_hash, salt, "Platform Admin", "SentinelScan", "admin", "enterprise", 999999, now_ts()),
             )
+            if config.ADMIN_PASSWORD_MINTED:
+                print(f"[SentinelScan] Admin account created -> {config.ADMIN_EMAIL} / {admin_pw}", flush=True)
+                print("[SentinelScan] Random password saved to data/.admin_password; set ADMIN_PASSWORD env var to choose your own.", flush=True)
         # settings
         conn.execute("INSERT OR IGNORE INTO settings (key,value) VALUES ('tagline',?)",
                      ("Automated security scanning for modern teams",))
