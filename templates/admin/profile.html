@@ -1,0 +1,44 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Profile — Admin console{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#128100;</span><div><h1 style="margin:0">Your profile</h1><div class="mut small">Administrator account</div></div></div>
+
+{% if done %}<div class="alert ok">{{ note }}</div>{% endif %}
+{% if error %}<div class="alert err">{{ error }}</div>{% endif %}
+
+<div class="layout" style="gap:20px;align-items:start">
+  <div class="card" style="flex:1">
+    <div class="small faint" style="padding:2px 0 10px">ACCOUNT DETAILS</div>
+    <dl class="kv">
+      <dt>Name</dt><dd>{{ admin.name }}</dd>
+      <dt>Email</dt><dd><code>{{ admin.email }}</code> <span class="tag">admin</span></dd>
+      <dt>Role</dt><dd>{{ admin.role|upper }}</dd>
+      {% if admin.last_login %}<dt>Last login</dt><dd class="mut">{{ admin.last_login|dt }}</dd>{% endif %}
+      <dt>Joined</dt><dd class="mut">{{ admin.created_at|dt }}</dd>
+    </dl>
+    <p class="small mut" style="margin-top:14px">Account details are managed by the platform. To change how you sign in, update your password below.</p>
+  </div>
+
+  <div class="card" style="flex:1;max-width:460px">
+    <div class="small faint" style="padding:2px 0 10px">SECURITY</div>
+    <h2 style="margin:0 0 4px;font-size:18px">Change password</h2>
+    <p class="small mut" style="margin:0 0 14px">Requires your current password. You'll be signed out of other sessions.</p>
+    <form method="post">
+      {% if csrf %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endif %}
+      <div class="field">
+        <label>Current password</label>
+        <input class="input" type="password" name="current" autofocus required>
+      </div>
+      <div class="field">
+        <label>New password</label>
+        <input class="input" type="password" name="password" required>
+      </div>
+      <div class="field">
+        <label>Confirm new password</label>
+        <input class="input" type="password" name="confirm" required>
+      </div>
+      <button class="btn btn-primary" type="submit">Update password</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

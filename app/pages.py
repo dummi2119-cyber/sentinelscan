@@ -310,6 +310,37 @@ def admin_logs(request: Request):
     return _admin_layout(request, "logs", {"logs": db.list_logs()})
 
 
+# ------------------------------------------------------------------ admin profile (self-service)
+@router.get("/admin/profile")
+def admin_profile(request: Request):
+    a = require_admin(request)
+    return _admin_layout(request, "profile", {"admin": a})
+
+
+@router.post("/admin/profile")
+async def admin_profile_submit(request: Request, current: str = Form(...),
+                               password: str = Form(...), confirm: str = Form(...)):
+    a = require_admin(request)
+    row = db.get_user(a["id"])
+    if not security.verify_password(current, row["password_hash"], row["salt"]):
+        return _admin_layout(request, "profile",
+                             {"admin": a, "error": "Current password is incorrect."})
+    if len(password) < 8:
+        return _admin_layout(request, "profile",
+                             {"admin": a, "error": "New password must be at least 8 characters."})
+    if password != confirm:
+        return _admin_layout(request, "profile",
+                             {"admin": a, "error": "New passwords do not match."})
+    pw_hash, salt = security.hash_password(password)
+    with db.get_db() as conn:
+        conn.execute("UPDATE users SET password_hash=?, salt=? WHERE id=?", (pw_hash, salt, a["id"]))
+    db.audit("admin_password_changed", f"admin:{a['id']}", actor=f"admin:{a['id']}")
+    # After an admin changes their password, bounce them to admin login fresh for safety.
+    return _admin_layout(request, "profile",
+                         {"admin": a, "done": True,
+                          "note": "Password updated. You can keep using this console, or log in again next time."})
+
+
 @router.get("/admin/scan/{scan_id}/report")
 def admin_scan_report(scan_id: str, request: Request):
     require_admin(request)

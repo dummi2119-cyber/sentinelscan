@@ -65,9 +65,7 @@ def require_user(request: Request):
     u = request.state.user
     if not u or u.get("blocked"):
         raise HTTPException(status_code=401, detail="Authentication required")
-    if u.get("role") != "user":
-        # admins hitting user routes -> bounce to admin area
-        raise HTTPException(status_code=403, detail="Forbidden")
+    # admins may enter the customer panel (e.g. the "User view" preview link)
     return u
 
 
