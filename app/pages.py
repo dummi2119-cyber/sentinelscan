@@ -1,10 +1,10 @@
 """Server-rendered page routes: marketing, auth, user panel, admin panel."""
 import os
 
-from fastapi import APIRouter, Request, Form, HTTPException
+from fastapi import APIRouter, Request, Form, HTTPException, Query
 from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 
-from . import config, db, security
+from . import config, db, security, emailer
 from .main import render, current_user, require_user, require_admin
 
 router = APIRouter()
@@ -88,6 +88,61 @@ def logout(request: Request):
     return resp
 
 
+# ------------------------------------------------------------------ password reset (public)
+@router.get("/forgot-password")
+def forgot_password_page(request: Request):
+    if request.state.user:
+        return RedirectResponse("/app/dashboard", status_code=302)
+    return render(request, "auth/forgot.html", {"active": "login"})
+
+
+@router.post("/forgot-password")
+async def forgot_password_submit(request: Request, email: str = Form(...)):
+    email = email.strip().lower()
+    # Respond identically whether or not the email exists (no account enumeration).
+    row = db.get_user_by_email(email)
+    if row and row["is_active"] and row["role"] != "admin":
+        token = db.create_password_reset(row["id"])
+        link = str(request.base_url).rstrip("/") + f"/reset-password?token={token}"
+        html = (
+            f"<p>You requested a password reset for <b>{email}</b>.</p>"
+            f"<p><a href='{link}' style='display:inline-block;padding:10px 18px;background:#7c3aed;"
+            f"color:#fff;text-decoration:none;border-radius:8px'>Reset password</a></p>"
+            f"<p>This link expires in 1 hour. If you didn't request it, you can ignore this email.</p>"
+        )
+        emailer.send_email(email, "Reset your SentinelScan password", html)
+    return render(request, "auth/forgot.html", {"sent": True, "email": email, "active": "login"})
+
+
+@router.get("/reset-password")
+def reset_password_page(request: Request, token: str = Query("")):
+    if request.state.user:
+        return RedirectResponse("/app/dashboard", status_code=302)
+    valid = db.get_reset_by_token(token) is not None
+    return render(request, "auth/reset.html", {"token": token, "valid": valid, "active": "login"})
+
+
+@router.post("/reset-password")
+async def reset_password_submit(request: Request, token: str = Form(...),
+                                password: str = Form(...), confirm: str = Form(...)):
+    info = db.get_reset_by_token(token)
+    if not info:
+        return render(request, "auth/reset.html", {"token": token, "valid": False, "active": "login",
+                    "error": "This reset link is invalid or has expired. Please request a new one."})
+    if len(password) < 8:
+        return render(request, "auth/reset.html", {"token": token, "valid": True, "active": "login",
+                    "error": "Password must be at least 8 characters."})
+    if password != confirm:
+        return render(request, "auth/reset.html", {"token": token, "valid": True, "active": "login",
+                    "error": "Passwords do not match."})
+    pw_hash, salt = security.hash_password(password)
+    with db.get_db() as conn:
+        conn.execute("UPDATE users SET password_hash=?, salt=? WHERE id=?", (pw_hash, salt, info["user_id"]))
+    db.consume_reset_token(token)
+    db.audit("password_reset", f"user:{info['user_id']}", actor=f"user:{info['user_id']}")
+    return render(request, "auth/reset.html", {"token": token, "valid": True, "done": True, "active": "login"})
+
+
 # ------------------------------------------------------------------ user panel
 def _user_layout(request: Request, active: str, extra=None):
     u = require_user(request)
@@ -163,6 +218,36 @@ async def user_upgrade(request: Request, plan_key: str):
         conn.execute("UPDATE users SET plan=?, credits=? WHERE id=?", (plan_key, int(plan["credits"]), u["id"]))
     db.audit(f"upgraded_to_{plan_key}", f"user:{u['id']}", actor=f"user:{u['id']}")
     return RedirectResponse("/app/profile", status_code=302)
+
+
+@router.get("/app/password")
+def user_change_password_page(request: Request):
+    require_user(request)
+    return _user_layout(request, "change_password")
+
+
+@router.post("/app/password")
+async def user_change_password_submit(request: Request, current: str = Form(...),
+                                      password: str = Form(...), confirm: str = Form(...)):
+    u = require_user(request)
+    row = db.get_user(u["id"])
+    if not security.verify_password(current, row["password_hash"], row["salt"]):
+        return _user_layout(request, "change_password",
+                            {"error": "Current password is incorrect.", "password": password, "confirm": confirm})
+    if len(password) < 8:
+        return _user_layout(request, "change_password",
+                            {"error": "New password must be at least 8 characters.", "password": password, "confirm": confirm})
+    if password != confirm:
+        return _user_layout(request, "change_password",
+                            {"error": "New passwords do not match.", "password": password, "confirm": confirm})
+    pw_hash, salt = security.hash_password(password)
+    with db.get_db() as conn:
+        conn.execute("UPDATE users SET password_hash=?, salt=? WHERE id=?", (pw_hash, salt, u["id"]))
+    # Log the user out of all sessions for safety after a password change.
+    resp = RedirectResponse("/logout", status_code=302)
+    resp.delete_cookie(config.COOKIE_NAME)
+    db.audit("password_changed", f"user:{u['id']}", actor=f"user:{u['id']}")
+    return resp
 
 
 # ------------------------------------------------------------------ admin panel

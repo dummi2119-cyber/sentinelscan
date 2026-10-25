@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Reset password — SentinelScan{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="card auth-card">
+    <a class="brand" href="/"><span class="logo">S</span> SentinelScan</a>
+    <h2 class="center" style="margin-bottom:6px">Set a new password</h2>
+
+    {% if done %}
+      <p class="center mut" style="margin-bottom:18px">Your password has been reset successfully.</p>
+      <a class="btn btn-primary btn-block" href="/login">Sign in with new password</a>
+    {% else %}
+      <p class="center mut" style="margin-bottom:18px">Choose a strong password for your account.</p>
+      {% if error %}<div class="alert err">{{ error }}</div>{% endif %}
+      <form method="post">
+        {% if csrf %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endif %}
+        <input type="hidden" name="token" value="{{ token }}">
+        <div class="field">
+          <label>New password</label>
+          <input class="input" type="password" name="password" autofocus required>
+        </div>
+        <div class="field">
+          <label>Confirm new password</label>
+          <input class="input" type="password" name="confirm" required>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Reset password</button>
+      </form>
+      <p class="center small" style="margin-top:14px"><a href="/login">&larr; Back to login</a></p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

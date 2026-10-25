@@ -37,6 +37,46 @@ def to_dt(ts):
     return time.strftime("%Y-%m-%d %H:%M", time.localtime(ts)) if ts else ""
 
 
+# ---------------------------------------------------------- password resets
+RESET_TTL_SECONDS = 60 * 60  # reset links live 1 hour
+
+
+def create_password_reset(user_id: int) -> str:
+    """Invalidate prior unused tokens for this user, mint a fresh one, return it."""
+    import secrets
+    with get_db() as conn:
+        conn.execute("UPDATE password_resets SET used=1 WHERE user_id=? AND used=0", (user_id,))
+        token = secrets.token_urlsafe(32)
+        now = now_ts()
+        conn.execute(
+            "INSERT INTO password_resets (user_id, token, created_at, expires_at, used) VALUES (?,?,?,?,0)",
+            (user_id, token, now, now + RESET_TTL_SECONDS),
+        )
+        conn.commit()
+    return token
+
+
+def get_reset_by_token(token: str):
+    """Return {'user_id', 'expires_at'} for an unused, unexpired token, else None."""
+    if not token:
+        return None
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT user_id, expires_at, used FROM password_resets WHERE token=?", (token,)
+        ).fetchone()
+    if not row or row["used"]:
+        return None
+    if now_ts() > row["expires_at"]:
+        return None
+    return {"user_id": row["user_id"], "expires_at": row["expires_at"]}
+
+
+def consume_reset_token(token: str):
+    with get_db() as conn:
+        conn.execute("UPDATE password_resets SET used=1 WHERE token=?", (token,))
+        conn.commit()
+
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,6 +142,16 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 """
 

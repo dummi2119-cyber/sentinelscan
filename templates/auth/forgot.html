@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Forgot password — SentinelScan{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="card auth-card">
+    <a class="brand" href="/"><span class="logo">S</span> SentinelScan</a>
+    <h2 class="center" style="margin-bottom:6px">Forgot password?</h2>
+    <p class="center mut" style="margin-bottom:20px">Enter your account email and we'll send a reset link.</p>
+
+    {% if sent %}
+      <div class="alert ok">If an account exists for <b>{{ email }}</b>, a password reset link has been sent. It expires in 1 hour.</div>
+      <p class="center small" style="margin-top:14px"><a href="/login">&larr; Back to login</a></p>
+    {% else %}
+      {% if error %}<div class="alert err">{{ error }}</div>{% endif %}
+      <form method="post">
+        {% if csrf %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endif %}
+        <div class="field">
+          <label>Email address</label>
+          <input class="input" type="email" name="email" autofocus required>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Send reset link</button>
+      </form>
+      <p class="center small" style="margin-top:14px"><a href="/login">&larr; Back to login</a></p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
