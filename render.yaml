@@ -1,7 +1,22 @@
 # Render auto-deploy blueprint.
-# Push this repo to GitHub, then at https://render.com/dashboard -> "New +" ->
-# "Blueprint" and connect the repo. Render reads this file and provisions the
-# web service for you.
+#
+# HOW TO DEPLOY
+#   1. Push this repo to GitHub (done).
+#   2. Open https://render.com/dashboard -> "New +" -> "Blueprint"
+#      and connect the `dummi2119-cyber/sentinelscan` repo.
+#   3. Render reads this file and shows a review screen. It will PROMPT you
+#      for any env var declared below WITHOUT a value (ADMIN_PASSWORD,
+#      RESEND_API_KEY). Fill them in, then click "Create Blueprint".
+#
+# NOTES
+#   * Free plan services scale down after ~15 min idle (cold-start on next hit).
+#   * The free plan uses an EPHEMERAL filesystem: data/sentinel.db, the login
+#     session secret, and the minted admin password reset on every deploy.
+#     Set ADMIN_PASSWORD below so the admin login stays stable across deploys.
+#     For durable user data/scans, upgrade to a paid service + Render Postgres
+#     (requires a small DB-layer change — ask if you want that next).
+#   * Reset-password emails need an email provider: set RESEND_API_KEY
+#     (free at resend.com). Without it, reset emails are logged, not sent.
 services:
   - type: web
     name: sentinelscan
@@ -14,3 +29,14 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
+      # --- Stable admin login across deploys (set ADMIN_PASSWORD for sure) ---
+      - key: ADMIN_EMAIL
+        value: "admin@sentinel.local"
+      - key: ADMIN_PASSWORD
+        description: "Admin console password (min 8 chars). Kept secret."
+      # --- HTTPS cookies (recommended once live) ---
+      - key: SECURE_COOKIE
+        value: "true"
+      # --- Reset-password email provider (optional; omit = emails logged) ---
+      - key: RESEND_API_KEY
+        description: "Optional: Resend API key for reset-password emails."

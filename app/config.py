@@ -57,7 +57,10 @@ def get_admin_password():
 ADMIN_PASSWORD_MINTED = not bool(_ADMIN_PW_ENV)  # True when we generated a random one
 
 COOKIE_NAME = "sentinel_session"
-COOKIE_SECURE = False  # dev only; flip to True behind HTTPS
+# Secure cookies only over HTTPS. Off in local dev; flip on behind Render TLS
+# by setting SECURE_COOKIE=true (Render serves the service over HTTPS).
+_COOKIE = os.environ.get("SECURE_COOKIE", "").strip().lower()
+COOKIE_SECURE = _COOKIE in ("1", "true", "yes", "on")
 
 # Concurrency for the scan runner
 MAX_CONCURRENT_SCANS = 3
