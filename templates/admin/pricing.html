@@ -1,0 +1,34 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Pricing{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#128176;</span><div><h1 style="margin:0">Pricing plans</h1><div class="mut small">Edit names, prices and credit grants. Changes apply to new upgrades.</div></div></div>
+
+<div class="grid grid-3">
+  {% for p in plans %}
+  <div class="card" style="{% if p.highlight %}border-color:var(--acc){% endif %}">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">{{ p.name }}</h3>
+      <span class="tag mono">{{ p.key }}</span>
+    </div>
+    <div class="field" style="margin-top:14px"><label>Price ($/mo)</label><input class="input" type="number" id="price-{{ p.key }}" value="{{ p.price }}"></div>
+    <div class="field"><label>Credits</label><input class="input" type="number" id="credits-{{ p.key }}" value="{{ p.credits }}"></div>
+    <div class="field"><label>Name</label><input class="input" id="name-{{ p.key }}" value="{{ p.name }}"></div>
+    <button class="btn btn-primary btn-block" onclick="savePlan('{{ p.key }}')">Save plan</button>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function savePlan(key){
+  var body = {
+    price: parseInt(document.getElementById('price-'+key).value,10)||0,
+    credits: parseInt(document.getElementById('credits-'+key).value,10)||0,
+    name: document.getElementById('name-'+key).value
+  };
+  fetch('/api/admin/pricing/'+key, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})
+    .then(function(r){ if(r.ok){ toast('Plan saved','ok'); } else { r.json().then(function(d){ toast(d.error||'Failed','err'); }); } });
+}
+</script>
+{% endblock %}

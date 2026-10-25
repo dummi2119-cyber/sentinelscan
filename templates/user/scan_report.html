@@ -1,0 +1,51 @@
+{% extends "user/user_base.html" %}
+{% block title %}Report: {{ scan.target }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <div class="section-title" style="margin:0"><span class="ico">&#128196;</span><div><h1 style="margin:0;font-size:20px">Scan report</h1><div class="mut small"><code>{{ scan.target }}</code> &middot; {{ scan.tool }}</div></div></div>
+  <div class="spacer"></div>
+  {% if scan.status=='completed' %}
+    <a class="btn btn-sm btn-ghost" href="/api/scan/{{ scan.id }}/report.json" download>Export JSON</a>
+    <a class="btn btn-sm btn-ghost" href="/api/scan/{{ scan.id }}/report.html" target="_blank">HTML report</a>
+  {% endif %}
+  <a class="btn btn-sm btn-ghost" href="/app/scans">&larr; History</a>
+</div>
+
+{% if scan.status=='running' or scan.status=='queued' %}
+<div class="card"><div class="progress"><i style="width:{% if scan.status=='running' %}60{% else %}20{% endif %}%"></i></div>
+  <p class="mut" style="margin-top:12px">{% if scan.status=='running' %}Scan in progress&hellip;{% else %}Queued&hellip;{% endif %} <a href="/app/scan/{{ scan.id }}">Refresh</a></p></div>
+{% elif scan.status=='failed' %}
+<div class="card"><div class="alert err">This scan failed: {{ scan.error }}</div><a class="btn btn-ghost" href="/app/new-scan">Run a new scan</a></div>
+{% else %}
+<div class="grid grid-4" style="margin-bottom:22px">
+  <div class="stat crit"><div class="num">{{ findings|selectattr('severity','equalto','critical')|list|length }}</div><div class="lbl">Critical</div></div>
+  <div class="stat high"><div class="num">{{ findings|selectattr('severity','equalto','high')|list|length }}</div><div class="lbl">High</div></div>
+  <div class="stat med"><div class="num">{{ findings|selectattr('severity','equalto','medium')|list|length }}</div><div class="lbl">Medium</div></div>
+  <div class="stat low"><div class="num">{{ findings|selectattr('severity','equalto','low')|list|length + (findings|selectattr('severity','equalto','info')|list|length) }}</div><div class="lbl">Low / Info</div></div>
+</div>
+
+<div class="card" style="padding:0">
+  <table class="table">
+    <thead><tr><th style="width:120px">Severity</th><th>Title</th><th>Location</th><th style="width:70px">CVSS</th></tr></thead>
+    <tbody>
+    {% for f in findings %}
+      <tr style="cursor:pointer" onclick="toggleRow('d{{ loop.index }}')">
+        <td><span class="pill {{ f.severity }}">{{ f.severity }}</span></td>
+        <td><b>{{ f.title }}</b></td>
+        <td><code>{{ f.path }}</code></td>
+        <td>{{ f.cvss }}</td>
+      </tr>
+      <tr id="d{{ loop.index }}" style="display:none"><td colspan="4" style="background:var(--bg2)">
+        <p style="margin:.6em 0">{{ f.description }}</p>
+        <p style="margin:.4em 0"><b style="color:#fca5a5">Impact:</b> {{ f.impact }}</p>
+        <p style="margin:.4em 0"><b style="color:#86efac">Remediation:</b> {{ f.remediation }}</p>
+        <p class="small faint" style="margin:.4em 0"><b>Evidence:</b> {{ f.evidence }} &middot; <a href="{{ f.reference }}" target="_blank">reference</a></p>
+      </td></tr>
+    {% else %}
+      <tr><td colspan="4" class="empty">No findings &mdash; nice work.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

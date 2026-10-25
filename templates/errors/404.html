@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Not found{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="card auth-card" style="text-align:center">
+    <div style="font-size:56px;font-weight:800;color:var(--acc)">404</div>
+    <h2>Page not found</h2>
+    <p class="mut">The page you're looking for doesn't exist.</p>
+    <a class="btn btn-primary" href="/">Back to home</a>
+    {% if current_user %}<a class="btn btn-ghost" href="{% if is_admin %}/admin/dashboard{% else %}/app/dashboard{% endif %}">Go to dashboard</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

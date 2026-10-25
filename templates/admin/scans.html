@@ -1,0 +1,33 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}All scans{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#128290;</span><div><h1 style="margin:0">All scans</h1><div class="mut small">Every scan run across all users.</div></div></div>
+
+<div class="card" style="padding:0">
+  {% if scans %}
+  <table class="table">
+    <thead><tr><th>Scan</th><th>User</th><th>Tool</th><th>Target</th><th>Status</th><th>Crit/High</th><th>Created</th><th></th></tr></thead>
+    <tbody>
+    {% for s in scans %}
+      <tr>
+        <td class="mono small">{{ s.id }}</td>
+        <td class="small mut">#{{ s.user_id }}</td>
+        <td>{{ s.tool }}</td>
+        <td><code>{{ s.target }}</code></td>
+        <td>
+          {% if s.status=='completed' %}<span class="pill ok">Completed</span>
+          {% elif s.status=='running' %}<span class="pill run"><span class="spin"></span> Running</span>
+          {% elif s.status=='queued' %}<span class="pill que"><span class="spin"></span> Queued</span>
+          {% elif s.status=='failed' %}<span class="pill bad">Failed</span>
+          {% else %}<span class="pill cancel">{{ s.status }}</span>{% endif %}
+        </td>
+        <td class="small">{% if s.summary %}{{ s.summary.critical or 0 }}/{{ s.summary.high or 0 }}{% else %}&mdash;{% endif %}</td>
+        <td class="small mut">{{ s.created_h }}</td>
+        <td>{% if s.status=='completed' %}<a class="btn btn-sm btn-ghost" href="/admin/scan/{{ s.id }}/report" target="_blank">View</a>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<div class="empty">No scans recorded yet.</div>{% endif %}
+</div>
+{% endblock %}

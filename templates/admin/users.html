@@ -1,0 +1,50 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#128101;</span><div><h1 style="margin:0">Users</h1><div class="mut small">{{ users|length }} account(s)</div></div></div>
+
+<div class="card" style="padding:0">
+  {% if users %}
+  <table class="table">
+    <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Credits</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for u in users %}
+      <tr>
+        <td><b>{{ u.name }}</b>{% if u.company %}<div class="small faint">{{ u.company }}</div>{% endif %}</td>
+        <td><code>{{ u.email }}</code>{% if u.role=='admin' %} <span class="tag">admin</span>{% endif %}</td>
+        <td><span class="pill run" data-plan="{{ u.id }}">{{ u.plan|upper }}</span></td>
+        <td>{{ u.credits }}</td>
+        <td>{% if u.is_active %}<span class="pill ok">Active</span>{% else %}<span class="pill bad">Suspended</span>{% endif %}</td>
+        <td class="small mut">{{ u.created_at|dt }}</td>
+        <td>
+          <button class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-primary{% endif %}" onclick="toggleUser({{ u.id }}, {{ 'false' if u.is_active else 'true' }})">{% if u.is_active %}Suspend{% else %}Activate{% endif %}</button>
+          <button class="btn btn-sm btn-ghost" onclick="setPlan({{ u.id }}, '{{ u.plan }}', {{ u.credits }})">Plan</button>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<div class="empty">No users yet.</div>{% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleUser(uid, activate){
+  fetch('/api/admin/users/'+uid+'/toggle', {method:'POST'}).then(function(r){
+    if(r.ok){ toast(activate?'User activated':'User suspended','ok'); location.reload(); }
+    else toast('Could not update user','err');
+  });
+}
+function setPlan(uid, plan, credits){
+  var next = prompt('Set plan (free / pro / enterprise):', plan);
+  if(!next) return;
+  var c = prompt('Set credits:', credits);
+  if(c===null) return;
+  fetch('/api/admin/users/'+uid+'/plan', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({plan: next.trim(), credits: parseInt(c,10)||0})}).then(function(r){
+    if(r.ok){ toast('Plan updated','ok'); location.reload(); } else toast('Update failed','err');
+  });
+}
+</script>
+{% endblock %}

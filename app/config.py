@@ -1,0 +1,44 @@
+"""Central configuration: paths, secrets, and app constants."""
+import os
+import secrets
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # project root (scanforge/)
+APP_DIR = os.path.dirname(os.path.abspath(__file__))                     # app/
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(APP_DIR, "static")
+DATA_DIR = os.path.join(BASE_DIR, "data")
+REPORT_DIR = os.path.join(DATA_DIR, "reports")
+
+for _d in (DATA_DIR, REPORT_DIR):
+    os.makedirs(_d, exist_ok=True)
+
+DATABASE = os.path.join(DATA_DIR, "sentinel.db")
+
+# JWT signing secret. Generated once and persisted so sessions survive restarts.
+_SECRET_FILE = os.path.join(DATA_DIR, ".secret")
+if os.path.exists(_SECRET_FILE):
+    with open(_SECRET_FILE, "r") as fh:
+        SECRET = fh.read().strip()
+else:
+    SECRET = secrets.token_urlsafe(48)
+    with open(_SECRET_FILE, "w") as fh:
+        fh.write(SECRET)
+
+ALGORITHM = "HS256"
+TOKEN_TTL_SECONDS = 60 * 60 * 8  # 8 hours
+
+COOKIE_NAME = "sentinel_session"
+COOKIE_SECURE = False  # dev only; flip to True behind HTTPS
+
+# Concurrency for the scan runner
+MAX_CONCURRENT_SCANS = 3
+SCAN_TIMEOUT_SECONDS = 600
+
+# Default per-plan credit grants
+PLAN_DEFAULTS = {
+    "free": {"name": "Free", "price": 0, "credits": 10, "features": ["3 tools", "5 scans / month", "Email support"]},
+    "pro": {"name": "Pro", "price": 49, "credits": 500, "features": ["All tools", "Unlimited scans", "Burp Suite + ZAP", "Priority queue", "PDF reports"]},
+    "enterprise": {"name": "Enterprise", "price": 299, "credits": 10000, "features": ["All tools", "Unlimited everything", "On-prem scanner", "Dedicated manager", "SLA", "Custom integrations"]},
+}
+
+SEVERITIES = ["info", "low", "medium", "high", "critical"]

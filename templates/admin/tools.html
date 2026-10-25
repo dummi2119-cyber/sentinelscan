@@ -1,0 +1,38 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Tools{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#128736;&#65039;</span><div><h1 style="margin:0">Scanner tools</h1><div class="mut small">Enable or disable scanners and set their credit cost.</div></div></div>
+
+<div class="grid grid-2">
+  {% for t in tools %}
+  <div class="card" style="border-color:{% if t.enabled %}var(--line){% else %}var(--line){% endif %};opacity:{% if t.enabled %}1{% else %}.6{% endif %}">
+    <div style="display:flex;justify-content:space-between;align-items:start">
+      <div>
+        <h3 style="margin:0">{{ t.name }}</h3>
+        <span class="tag">{{ t.category }}</span>
+      </div>
+      <span class="{% if t.enabled %}pill ok{% else %}pill cancel{% endif %}">{{ 'Enabled' if t.enabled else 'Disabled' }}</span>
+    </div>
+    <p class="mut small" style="margin:.6em 0">{{ t.description }}</p>
+    <div class="kv" style="margin-bottom:12px">
+      <div>Cost / scan</div><div>{{ t.credits }} credit(s)</div>
+      <div>Requires</div><div class="small">{{ t.requires or '—' }}</div>
+    </div>
+    <button class="btn btn-sm {% if t.enabled %}btn-danger{% else %}btn-primary{% endif %}" onclick="toggleTool('{{ t.key }}', {{ 'false' if t.enabled else 'true' }})">
+      {% if t.enabled %}Disable{% else %}Enable{% endif %}
+    </button>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleTool(key, enable){
+  fetch('/api/admin/tools/'+key+'/toggle', {method:'POST'}).then(function(r){
+    if(r.ok){ toast((enable?'Enabled':'Disabled')+' '+key,'ok'); location.reload(); }
+    else toast('Update failed','err');
+  });
+}
+</script>
+{% endblock %}

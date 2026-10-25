@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="wrap" style="padding-top:28px;padding-bottom:48px">
+  <div class="layout">
+    <aside class="side card" style="padding:14px;position:sticky;top:84px">
+      <div class="small faint" style="padding:4px 12px 8px">ADMIN CONSOLE</div>
+      <a href="/admin/dashboard" class="{% if active=='dashboard' %}active{% endif %}"><span class="ico">&#128202;</span> Overview</a>
+      <a href="/admin/users" class="{% if active=='users' %}active{% endif %}"><span class="ico">&#128101;</span> Users</a>
+      <a href="/admin/scans" class="{% if active=='scans' %}active{% endif %}"><span class="ico">&#128290;</span> All scans</a>
+      <a href="/admin/tools" class="{% if active=='tools' %}active{% endif %}"><span class="ico">&#128736;&#65039;</span> Tools</a>
+      <a href="/admin/pricing" class="{% if active=='pricing' %}active{% endif %}"><span class="ico">&#128176;</span> Pricing</a>
+      <a href="/admin/logs" class="{% if active=='logs' %}active{% endif %}"><span class="ico">&#128220;</span> Audit log</a>
+      <hr style="margin:10px 0">
+      <a href="/app/dashboard"><span class="ico">&#128640;</span> User view</a>
+      <a href="/" class="faint small"><span class="ico">&#8592;</span> Back to site</a>
+    </aside>
+    <main>{% block content %}{% endblock %}</main>
+  </div>
+</div>
+{% endblock %}

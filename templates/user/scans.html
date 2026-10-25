@@ -1,0 +1,48 @@
+{% extends "user/user_base.html" %}
+{% block title %}Scan history{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#128468;&#65039;</span><div><h1 style="margin:0">Scan history</h1><div class="mut small">{{ scans|length }} scan(s)</div></div>
+  <div class="spacer"></div>
+  <a class="btn btn-primary" href="/app/new-scan">&#128290; New scan</a>
+</div>
+
+<div class="toolbar">
+  <a class="btn btn-sm {% if not tool_filter %}btn-primary{% else %}btn-ghost{% endif %}" href="/app/scans">All</a>
+  {% set seen = [] %}
+  {% for s in scans %}{% if s.tool not in seen %}{% set _ = seen.append(s.tool) %}{% endif %}{% endfor %}
+  {% for t in seen %}<a class="btn btn-sm {% if tool_filter==t %}btn-primary{% else %}btn-ghost{% endif %}" href="/app/scans?tool={{ t }}">{{ t }}</a>{% endfor %}
+</div>
+
+<div class="card" style="padding:0">
+  {% if scans %}
+  <table class="table">
+    <thead><tr><th>Tool</th><th>Target</th><th>Status</th><th>Critical</th><th>High</th><th>Medium</th><th>Finished</th><th></th></tr></thead>
+    <tbody>
+    {% for s in scans %}
+      <tr>
+        <td>{{ s.tool }}</td>
+        <td><code>{{ s.target }}</code></td>
+        <td>{% include "user/_status.html" %}</td>
+        <td>{% if s.summary %}{{ s.summary.critical or 0 }}{% else %}&mdash;{% endif %}</td>
+        <td>{% if s.summary %}{{ s.summary.high or 0 }}{% else %}&mdash;{% endif %}</td>
+        <td>{% if s.summary %}{{ s.summary.medium or 0 }}{% else %}&mdash;{% endif %}</td>
+        <td class="small mut">{{ s.finished_h or s.created_h }}</td>
+        <td>{% if s.status=='completed' %}<a class="btn btn-sm btn-ghost" href="/app/scan/{{ s.id }}">Report</a>{% elif s.status in ('running','queued') %}<button class="btn btn-sm btn-danger" onclick="cancelScan('{{ s.id }}')">Cancel</button>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">No scans yet. <a href="/app/new-scan">Run your first scan &rarr;</a></div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function cancelScan(id){
+  if(!confirm('Cancel this scan?')) return;
+  fetch('/api/scan/'+id+'/cancel', {method:'POST'}).finally(()=>location.reload());
+}
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# --- App runtime data (DB + generated secret must NOT be committed) ---
+data/
+*.db
+*.db-wal
+*.db-shm
+.secret
+
+# --- Scratch / test files ---
+_*.py
+_*.sh
+_*.txt
+_*.log
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

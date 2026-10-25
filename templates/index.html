@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Automated Security Scanning{% endblock %}
+{% block body %}
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">&#9728; Continuous vulnerability scanning</span>
+    <h1>Find vulnerabilities <span class="grad">before attackers do</span></h1>
+    <p class="lead">{{ tagline }}. Run Burp Suite, OWASP ZAP, Nmap, Nuclei and more against your apps and infrastructure from one dashboard.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="/register">Start scanning free</a>
+      <a class="btn btn-ghost" href="/#tools">See the toolset &#8594;</a>
+    </div>
+    <p class="trust">No credit card required &middot; 10 free scans &middot; SOC-2 style reporting</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="center" style="max-width:620px;margin:0 auto 34px">
+      <h2>One platform for your whole security pipeline</h2>
+      <p class="mut">Automated, scheduled and report-ready scanning for dev and security teams.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card hover"><h3>&#128737;&#65039; Automated scans</h3><p class="mut">Launch active, passive and network scans with sensible defaults. Queue multiple targets and walk away.</p></div>
+      <div class="card hover"><h3>&#128274; Deep tooling</h3><p class="mut">Burp Suite, OWASP ZAP, Nuclei, Nmap, Nikto, sqlmap and Subfinder &mdash; real tools, real results.</p></div>
+      <div class="card hover"><h3>&#128202; Actionable reports</h3><p class="mut">Severity-ranked findings with CVSS, evidence and remediation. Export JSON or branded HTML/PDF.</p></div>
+      <div class="card hover"><h3>&#128241; API first</h3><p class="mut">Trigger scans from CI/CD with a clean REST API and webhooks. Scan on every deploy.</p></div>
+      <div class="card hover"><h3>&#128101; Team access</h3><p class="mut">Separate user and admin consoles, per-user credits, plans and granular permissions.</p></div>
+      <div class="card hover"><h3>&#128272; Owned targets only</h3><p class="mut">Built-in authorization gate. Every scan records consent &mdash; scan only what you own.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="tools" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="center" style="max-width:620px;margin:0 auto 34px">
+      <h2>28+ industry-standard scanners</h2>
+      <p class="mut">Best-of-breed tools wired into a single workflow. Here are the standouts.</p>
+    </div>
+    <div class="grid grid-3">
+      {% for t in tools %}
+      <div class="card hover">
+        <div style="display:flex;justify-content:space-between;align-items:start">
+          <h3 style="margin:0">{{ t.name }}</h3>
+          <span class="tag">{{ t.category }}</span>
+        </div>
+        <p class="mut small" style="margin:.5em 0 0">{{ t.description }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="center" style="max-width:620px;margin:0 auto 34px">
+      <h2>From target to report in three steps</h2>
+    </div>
+    <div class="grid grid-3">
+      <div class="card"><div class="price" style="font-size:22px;color:var(--acc)">1</div><h3>Pick a tool</h3><p class="mut">Choose a scanner and enter an owned target &mdash; URL, domain or IP range.</p></div>
+      <div class="card"><div class="price" style="font-size:22px;color:var(--acc)">2</div><h3>Run it</h3><p class="mut">The scan queues and runs on our engine. Watch progress live.</p></div>
+      <div class="card"><div class="price" style="font-size:22px;color:var(--acc)">3</div><h3>Get findings</h3><p class="mut">Review severity-ranked results and export a shareable report.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="center" style="max-width:620px;margin:0 auto 34px">
+      <h2>Simple, credit-based pricing</h2>
+      <p class="mut">Start free. Upgrade as your attack surface grows.</p>
+    </div>
+    <div class="grid grid-3">
+      {% for p in plans %}
+      <div class="card hover" style="{% if p.highlight %}border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset{% endif %}">
+        {% if p.highlight %}<span class="pill run" style="margin-bottom:10px">Most popular</span>{% endif %}
+        <h3>{{ p.name }}</h3>
+        <div class="price">&uarr;{{ p.price }}<small>/mo</small></div>
+        <p class="mut small">{{ p.credits }} scan credits included</p>
+        <hr>
+        {% for f in p.features %}<div class="feature-li">{{ f }}</div>{% endfor %}
+        <a class="btn {% if p.highlight %}btn-primary{% else %}btn-ghost{% endif %} btn-block" href="/register">Get {{ p.name }}</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap center">
+    <div class="card" style="max-width:720px;margin:0 auto">
+      <h2>Ready to see what your apps are hiding?</h2>
+      <p class="mut">Create a free account and run your first scan in under a minute.</p>
+      <a class="btn btn-primary" href="/register">Create free account</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

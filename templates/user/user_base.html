@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="wrap" style="padding-top:28px;padding-bottom:48px">
+  <div class="layout">
+    <aside class="side card" style="padding:14px;position:sticky;top:84px">
+      <a href="/app/dashboard" class="{% if active=='dashboard' %}active{% endif %}"><span class="ico">&#128202;</span> Dashboard</a>
+      <a href="/app/new-scan" class="{% if active=='new_scan' %}active{% endif %}"><span class="ico">&#128290;</span> New scan</a>
+      <a href="/app/scans" class="{% if active=='scans' %}active{% endif %}"><span class="ico">&#128468;&#65039;</span> Scan history</a>
+      <a href="/app/profile" class="{% if active=='profile' %}active{% endif %}"><span class="ico">&#9881;&#65039;</span> Profile &amp; plan</a>
+      <hr style="margin:10px 0">
+      <a href="/" class="faint small"><span class="ico">&#8592;</span> Back to site</a>
+    </aside>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "user/user_base.html" %}
+{% block title %}Profile & plan{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#9881;&#65039;</span><div><h1 style="margin:0">Profile &amp; plan</h1></div></div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3 style="margin-top:0">Account</h3>
+    <div class="kv" style="margin-bottom:16px">
+      <div>Name</div><div>{{ me.name }}</div>
+      <div>Email</div><div>{{ me.email }}</div>
+      <div>Company</div><div>{{ me.company or '&mdash;' }}</div>
+      <div>Plan</div><div><span class="pill run">{{ me.plan|upper }}</span></div>
+      <div>Credits</div><div><b>{{ me.credits }}</b></div>
+    </div>
+    <form method="post" action="/app/profile/update">
+      {% if csrf %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endif %}
+      <div class="field"><label>Full name</label><input class="input" name="name" value="{{ me.name }}" required></div>
+      <div class="field"><label>Company</label><input class="input" name="company" value="{{ me.company or '' }}"></div>
+      <button class="btn btn-primary">Save changes</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Upgrade your plan</h3>
+    <p class="mut small">More credits, more tools, higher rate limits.</p>
+    {% for p in plans if p.key != me.plan %}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)">
+      <div><b>{{ p.name }}</b> &middot; &uarr;{{ p.price }}/mo &middot; <span class="mut small">{{ p.credits }} credits</span></div>
+      <form method="post" action="/app/upgrade/{{ p.key }}">{% if csrf %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endif %}<button class="btn btn-sm btn-primary">Upgrade</button></form>
+    </div>
+    {% endfor %}
+    {% if not plans %}<p class="mut small">No plans available.</p>{% endif %}
+    <hr>
+    <div class="small mut">API key: <code>sk_sentinel_live_&middot;&middot;&middot;</code> <span class="faint">(demo)</span></div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:22px">
+  <h3 style="margin-top:0">Recent account activity</h3>
+  {% if logs %}
+  <div class="log">
+    {% for l in logs %}<div><span class="t">[{{ l.created_h|default('') }}]</span> {{ l.action }} &middot; {{ l.target }}</div>{% endfor %}
+  </div>
+  {% else %}<p class="mut small">No recent activity.</p>{% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var btns = document.querySelectorAll('form[action="/app/upgrade/*"]');
+});
+</script>
+{% endblock %}

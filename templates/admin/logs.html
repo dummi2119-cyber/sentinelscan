@@ -1,0 +1,13 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#128220;</span><div><h1 style="margin:0">Audit log</h1><div class="mut small">Admin and system actions.</div></div></div>
+
+<div class="card">
+  {% if logs %}
+  <div class="log">
+    {% for l in logs %}<div><span class="t">[{{ l.created_h }}]</span> <b>{{ l.action }}</b> &middot; {{ l.target }} <span class="t">&middot; by {{ l.actor }}</span></div>{% endfor %}
+  </div>
+  {% else %}<div class="empty">No audit entries yet.</div>{% endif %}
+</div>
+{% endblock %}

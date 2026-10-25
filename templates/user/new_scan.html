@@ -1,0 +1,156 @@
+{% extends "user/user_base.html" %}
+{% block title %}New scan{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#128290;</span><div><h1 style="margin:0">New scan</h1><div class="mut small">Scan only infrastructure you own or are authorized to test.</div></div></div>
+
+<div id="scan-wizard">
+  <div class="grid grid-2">
+    <div class="card">
+      <label style="font-size:13px;font-weight:600;color:var(--mut);display:block;margin-bottom:7px">Target</label>
+      <input id="target" class="input" placeholder="https://example.com  or  192.0.2.10  or  example.com">
+      <div id="target-err" class="alert err" style="display:none;margin-top:12px"></div>
+
+      <div class="field" style="margin-top:18px">
+        <label>Extra options (optional)</label>
+        <div class="field" style="margin-bottom:10px">
+          <input id="opt-ports" class="input" placeholder="Nmap ports, e.g. 22,80,443">
+        </div>
+        <input id="opt-notes" class="textarea" placeholder="Notes / scope (not sent to scanner)">
+      </div>
+    </div>
+
+    <div class="card">
+      <label style="font-size:13px;font-weight:600;color:var(--mut);display:block;margin-bottom:7px">Choose a scanner</label>
+      <div id="tool-grid">
+        {% for t in tools %}
+        <label class="card hover tool-opt" style="display:block;margin-bottom:10px;cursor:pointer;border:1px solid var(--line)">
+          <input type="radio" name="tool" value="{{ t.key }}" data-credits="{{ t.credits }}" data-name="{{ t.name }}" {% if loop.first %}checked{% endif %}>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <b>{{ t.name }}</b>
+            <span class="chip"><span class="dot"></span>{{ t.credits }} cr</span>
+          </div>
+          <div class="small mut" style="margin-top:4px">{{ t.description }}</div>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar" style="margin-top:18px">
+    <span class="faint small">Cost: <b id="cost">1</b> credit &middot; remaining: <b id="remain">{{ me.credits }}</b></span>
+    <div class="spacer"></div>
+    <button id="run-btn" class="btn btn-primary">&#9654; Launch scan</button>
+  </div>
+</div>
+
+<div id="scan-live" style="display:none">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h3 style="margin:0" id="live-title">Scan running</h3>
+        <div class="mut small"><code id="live-target"></code> &middot; <span id="live-tool"></span></div>
+      </div>
+      <span id="live-pill" class="pill que"><span class="spin"></span> Queued</span>
+    </div>
+    <div class="progress" style="margin:16px 0"><i id="live-bar"></i></div>
+    <div id="live-msg" class="mut small">Submitting to engine&hellip;</div>
+    <div id="live-error" class="alert err" style="display:none;margin-top:14px"></div>
+    <div id="live-actions" style="margin-top:14px;display:none">
+      <a id="live-report" class="btn btn-primary" href="#" target="_blank">View report</a>
+      <button class="btn btn-ghost" onclick="location.href='/app/scans'">View all scans</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const tools = {{ tools|tojson }};
+  const costEl = document.getElementById('cost');
+  const remainEl = document.getElementById('remain');
+  const runBtn = document.getElementById('run-btn');
+  let pollTimer = null;
+
+  function selectedTool(){
+    const el = document.querySelector('input[name="tool"]:checked');
+    return el ? {key: el.value, credits: +el.dataset.credits, name: el.dataset.name} : null;
+  }
+  function refreshCost(){ const t = selectedTool(); if(t){ costEl.textContent = t.credits; } }
+  document.querySelectorAll('input[name="tool"]').forEach(r=>r.addEventListener('change', refreshCost));
+  refreshCost();
+
+  function showLive(){ document.getElementById('scan-wizard').style.display='none'; document.getElementById('scan-live').style.display='block'; }
+
+  function setPill(kind, text){
+    const p = document.getElementById('live-pill');
+    const map = {ok:['ok','Completed'],run:['run','<span class="spin"></span> Running'],que:['que','<span class="spin"></span> Queued'],bad:['bad','Failed'],cancel:['cancel','Cancelled']};
+    const [cls,html] = map[kind]||['que',kind];
+    p.className = 'pill '+cls; p.innerHTML = html+(text?(' '+text):'');
+  }
+
+  runBtn.addEventListener('click', async ()=>{
+    const target = document.getElementById('target').value.trim();
+    const errBox = document.getElementById('target-err');
+    errBox.style.display='none';
+    if(!target || target.length>300){ errBox.textContent='Enter a valid target (URL, domain or IP).'; errBox.style.display='block'; return; }
+    const t = selectedTool();
+    if(!t) return;
+    const params = {};
+    const ports = document.getElementById('opt-ports').value.trim();
+    if(ports) params.ports = ports;
+
+    showLive();
+    document.getElementById('live-target').textContent = target;
+    document.getElementById('live-tool').textContent = t.name;
+    document.getElementById('live-bar').style.width = '20%';
+    document.getElementById('live-msg').textContent = 'Submitting to engine...';
+
+    try{
+      const res = await fetch('/api/scan', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({tool: t.key, target, params})});
+      const data = await res.json();
+      if(!res.ok){
+        document.getElementById('live-error').textContent = data.error || 'Could not start scan.';
+        document.getElementById('live-error').style.display='block';
+        setPill('bad');
+        return;
+      }
+      remainEl.textContent = data.credits_remaining;
+      poll(data.scan_id);
+    }catch(e){
+      document.getElementById('live-error').textContent = 'Network error: '+e.message;
+      document.getElementById('live-error').style.display='block';
+      setPill('bad');
+    }
+  });
+
+  function poll(id){
+    clearInterval(pollTimer);
+    pollTimer = setInterval(async ()=>{
+      try{
+        const res = await fetch('/api/scan/'+id);
+        const s = await res.json();
+        document.getElementById('live-bar').style.width = (s.status==='completed'?'100%':(s.status==='running'?'60%':'35%'));
+        if(s.status==='running'){ document.getElementById('live-msg').textContent='Analyzing target and probing for vulnerabilities...'; }
+        if(s.status==='completed'){
+          setPill('ok');
+          document.getElementById('live-msg').textContent = 'Done. '+ JSON.stringify(s.summary).replace(/[{}]/g,'');
+          document.getElementById('live-actions').style.display='block';
+          document.getElementById('live-report').href = '/app/scan/'+id;
+          clearInterval(pollTimer);
+          toast('Scan complete!', 'ok');
+        }else if(s.status==='failed'){
+          setPill('bad');
+          document.getElementById('live-msg').textContent='Scan finished with errors.';
+          document.getElementById('live-error').textContent = s.error||'Scan failed.';
+          document.getElementById('live-error').style.display='block';
+          document.getElementById('live-actions').style.display='block';
+          clearInterval(pollTimer);
+        }else if(s.status==='cancelled'){ setPill('cancel'); clearInterval(pollTimer); }
+      }catch(e){ clearInterval(pollTimer); }
+    }, 1500);
+  }
+})();
+</script>
+{% endblock %}

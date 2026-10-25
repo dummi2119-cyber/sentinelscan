@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="card auth-card">
+    <a class="brand" href="/"><span class="logo">S</span> SentinelScan</a>
+    <h2 class="center" style="margin-bottom:6px">Start scanning free</h2>
+    <p class="center mut" style="margin-bottom:22px">10 free credits &middot; no credit card</p>
+    {% if error %}<div class="alert err">{{ error }}</div>{% endif %}
+    <form method="post" action="/register">
+      {% if csrf %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endif %}
+      <div class="field">
+        <label>Full name</label>
+        <input class="input" type="text" name="name" value="{{ name|default('',true) }}" required autofocus>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Email</label>
+          <input class="input" type="email" name="email" value="{{ email|default('',true) }}" required>
+        </div>
+        <div class="field">
+          <label>Company (optional)</label>
+          <input class="input" type="text" name="company" value="{{ company|default('',true) }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Password</label>
+          <input class="input" type="password" name="password" minlength="8" required>
+        </div>
+        <div class="field">
+          <label>Confirm password</label>
+          <input class="input" type="password" name="confirm" minlength="8" required>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Create account</button>
+    </form>
+    <div class="divider-label">Already have an account?</div>
+    <a class="btn btn-ghost btn-block" href="/login">Log in &rarr;</a>
+  </div>
+</div>
+{% endblock %}

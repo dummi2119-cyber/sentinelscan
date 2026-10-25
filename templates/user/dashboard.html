@@ -1,0 +1,43 @@
+{% extends "user/user_base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="section-title"><span class="ico">&#128202;</span><div><h1 style="margin:0">Dashboard</h1><div class="mut small">Welcome back, {{ me.name.split(' ')[0] }}.</div></div>
+  <div class="spacer"></div>
+  <a class="btn btn-primary" href="/app/new-scan">&#128290; New scan</a>
+</div>
+
+<div class="grid grid-4" style="margin-bottom:22px">
+  <div class="stat crit"><div class="num">{{ stats.vulns.critical }}</div><div class="lbl">Critical</div></div>
+  <div class="stat high"><div class="num">{{ stats.vulns.high }}</div><div class="lbl">High</div></div>
+  <div class="stat med"><div class="num">{{ stats.vulns.medium }}</div><div class="lbl">Medium</div></div>
+  <div class="stat low"><div class="num">{{ stats.vulns.low + stats.vulns.info }}</div><div class="lbl">Low / Info</div></div>
+</div>
+
+<div class="grid grid-2" style="margin-bottom:22px">
+  <div class="card"><div class="stat"><div class="num">{{ stats.scans }}</div><div class="lbl">Total scans run</div></div></div>
+  <div class="card"><div class="stat"><div class="num">{{ me.credits }}</div><div class="lbl">Credits remaining ({{ me.plan|upper }} plan)</div></div></div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Recent scans</h3>
+  {% if recent %}
+  <table class="table">
+    <thead><tr><th>Tool</th><th>Target</th><th>Status</th><th>Findings</th><th>When</th><th></th></tr></thead>
+    <tbody>
+    {% for s in recent %}
+      <tr>
+        <td>{{ s.tool }}</td>
+        <td><code>{{ s.target }}</code></td>
+        <td>{% include "user/_status.html" %}</td>
+        <td>{% if s.summary %}<span class="pill high">{{ s.summary.high or 0 }}h</span> <span class="pill critical">{{ s.summary.critical or 0 }}c</span>{% else %}<span class="faint">&mdash;</span>{% endif %}</td>
+        <td class="small mut">{{ s.created_h }}</td>
+        <td>{% if s.status=='completed' %}<a class="btn btn-sm btn-ghost" href="/app/scan/{{ s.id }}">Report</a>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">No scans yet. <a href="/app/new-scan">Run your first scan &rarr;</a></div>
+  {% endif %}
+</div>
+{% endblock %}

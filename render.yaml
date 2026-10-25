@@ -1,0 +1,16 @@
+# Render auto-deploy blueprint.
+# Push this repo to GitHub, then at https://render.com/dashboard -> "New +" ->
+# "Blueprint" and connect the repo. Render reads this file and provisions the
+# web service for you.
+services:
+  - type: web
+    name: sentinelscan
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"

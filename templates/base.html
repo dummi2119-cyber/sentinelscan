@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}SentinelScan{% endblock %} &middot; SentinelScan</title>
+  <meta name="description" content="{{ tagline }}">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="/"><span class="logo">S</span> SentinelScan</a>
+    <div class="spacer"></div>
+    <nav>
+      {% if current_user %}
+        {% if is_user %}
+          <a href="/app/dashboard">Dashboard</a>
+          <a href="/app/new-scan">New Scan</a>
+          <a href="/app/scans">Scans</a>
+          <span class="badge-credit">&#9889; {{ current_user.credits }} credits</span>
+          <a href="/app/profile">{{ current_user.name.split(' ')[0] }}</a>
+          <a href="/logout">Log out</a>
+        {% elif is_admin %}
+          <a href="/admin/dashboard">Admin</a>
+          <span class="badge-credit">console</span>
+          <a href="/logout">Log out</a>
+        {% endif %}
+      {% else %}
+        <a href="/">Home</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/#tools">Tools</a>
+        <a href="/login">Log in</a>
+        <a class="btn btn-primary btn-sm" href="/register">Start free</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+{% block body %}{% endblock %}
+
+<footer class="site">
+  <div class="wrap">
+    <div>&copy; 2026 SentinelScan &middot; Authorized security testing only.</div>
+    <div>
+      <a href="/#features">Features</a> &middot;
+      <a href="/#pricing">Pricing</a> &middot;
+      <a href="/#tools">Tools</a>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<script src="/static/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

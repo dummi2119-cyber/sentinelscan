@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Admin login{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="card auth-card" style="border-color:var(--line2)">
+    <a class="brand" href="/" style="color:var(--violet)"><span class="logo">S</span> SentinelScan <span class="tag">admin</span></a>
+    <h2 class="center" style="margin-bottom:6px">Platform console</h2>
+    <p class="center mut" style="margin-bottom:22px">Restricted area &middot; administrator access only</p>
+    {% if error %}<div class="alert err">{{ error }}</div>{% endif %}
+    <form method="post" action="/admin/login">
+      {% if csrf %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endif %}
+      <div class="field">
+        <label>Admin email</label>
+        <input class="input" type="email" name="email" value="{{ email|default('',true) }}" required autofocus>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input class="input" type="password" name="password" required>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Sign in to console</button>
+    </form>
+    <div class="divider-label">Tip</div>
+    <p class="center small faint">Default admin: <code>admin@sentinel.local</code> / <code>Admin123!</code> &mdash; change it after first login.</p>
+    <p class="center small" style="margin-top:14px"><a href="/login">&larr; Back to user login</a></p>
+  </div>
+</div>
+{% endblock %}

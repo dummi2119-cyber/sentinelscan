@@ -1,0 +1,6 @@
+{% if s.status=='completed' %}<span class="pill ok">Completed</span>
+{% elif s.status=='running' %}<span class="pill run"><span class="spin"></span> Running</span>
+{% elif s.status=='queued' %}<span class="pill que"><span class="spin"></span> Queued</span>
+{% elif s.status=='failed' %}<span class="pill bad">Failed</span>
+{% elif s.status=='cancelled' %}<span class="pill cancel">Cancelled</span>
+{% else %}<span class="pill que">{{ s.status }}</span>{% endif %}
